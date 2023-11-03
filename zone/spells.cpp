@@ -5098,6 +5098,7 @@ float Mob::ResistSpell(uint8 resist_type, uint16 spell_id, Mob *caster, bool use
 		}
 	}
 
+
 	if (CharismaCheck)
 	{
 		/*
@@ -5135,6 +5136,43 @@ float Mob::ResistSpell(uint8 resist_type, uint16 spell_id, Mob *caster, bool use
 
 	}
 
+	//start Steve stuff
+	if (!CharismaCheck)
+	{
+		/*
+		Charisma ONLY effects the initial resist check when charm is cast with 10 CHA = -1 Resist mod up to 255 CHA (min ~ 75 cha)
+		Charisma less than ~ 75 gives a postive modifier to resist checks at approximate ratio of -10 CHA = +6 Resist.
+		Mez spells do same initial resist check as a above.
+		Lull spells only check charisma if inital cast is resisted to see if mob will aggro, same modifier/cap as above.
+		Charisma DOES NOT extend charm durations.
+		Fear resist chance is given a -20 resist modifier if CHA is < 100, from 100-255 it progressively reduces the negative mod to 0.
+		Fears verse undead DO NOT apply a charisma modifer. (Note: unknown Base1 values defined in undead fears do not effect duration).
+		*/
+		int16 charisma = caster->GetCHA();
+
+		if (IsFear && (spells[spell_id].target_type != ST_Undead)){
+
+			if (charisma < 100)
+				resist_modifier -= 20;
+
+			else if (charisma <= 255)
+				resist_modifier += (charisma - 100)/8;
+		}
+
+		else {
+
+			if (charisma >= 75){
+
+				if (charisma > RuleI(Spells, CharismaEffectivenessCap))
+					charisma = RuleI(Spells, CharismaEffectivenessCap);
+				//steve this changed
+				resist_modifier -= (charisma - 75)/(RuleI(Spells, CharismaEffectiveness)*5);
+			}
+			else
+				resist_modifier += ((75 - charisma)/10) * 6; //Increase Resist Chance
+		}
+
+	}	
 
 	//Lull spells DO NOT use regular resists on initial cast, instead they use a flat +15 modifier. Live parses confirm this.
 	//Regular resists are used when checking if mob will aggro off of a lull resist.
