@@ -280,6 +280,10 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 					// take partial damage into account
 					dmg = (int64) (dmg * partial / 100);
 
+					// steve stuff start
+					dmg = (int64) (dmg * caster->itembonuses.INT / (RuleI(Spells,SpellModDivideByDD)));
+					// steve stuff end
+
 					//handles AAs and what not...
 					if(caster) {
 						if (reflect_effectiveness) {
@@ -305,6 +309,9 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 
 					if(caster)
 						dmg = caster->GetActSpellHealing(spell_id, dmg, this);
+					// Steve stuff start - add WIS bonus
+					dmg = (int64) (dmg * caster->itembonuses.WIS / (RuleI(Spells,SpellModDivideByDD)));
+					// Steve Stuff end
 
 					HealDamage(dmg, caster);
 				}
